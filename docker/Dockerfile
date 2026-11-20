@@ -11,7 +11,7 @@
 # ============================================================
 ARG ALPINE_VERSION=3.21
 
-FROM golang:1.25.9-alpine AS builder
+FROM golang:1.27.3-alpine AS builder
 
 ARG TARGETARCH
 ARG OCB_VERSION=v0.150.0

@@ -19,7 +19,7 @@ This means you can:
 
 ## Prerequisites
 
-- **Go 1.24+** installed
+- **Go 1.27.3+** installed
 - **OCB** installed (the build process installs it automatically via `make install-ocb`)
 
 To install OCB manually:
@@ -159,7 +159,7 @@ docker buildx build \
 
 The Dockerfile:
 
-1. Starts from `golang:1.24-alpine`
+1. Starts from `golang:1.27.3-alpine`
 2. Copies the entire repository (including `src/`, `ocb/`)
 3. Installs OCB and runs `ocb --config ocb/manifest.yaml`
 4. Copies the binary and default config (`ocb/config.yaml`) into a minimal Alpine runtime image

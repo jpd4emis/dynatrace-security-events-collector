@@ -9,10 +9,9 @@
 # ============================================================
 # Stage 1: Build the collector binary using OCB
 # ============================================================
-ARG GO_VERSION=1.25.9
 ARG ALPINE_VERSION=3.21
 
-FROM golang:${GO_VERSION}-alpine AS builder
+FROM golang:1.25.9-alpine AS builder
 
 ARG TARGETARCH
 ARG OCB_VERSION=v0.150.0

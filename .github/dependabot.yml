@@ -1,5 +1,19 @@
 version: 2
 updates:
+  - package-ecosystem: "docker"
+    directory: "/docker"
+    schedule:
+      interval: "daily"
+    cooldown:
+      default-days: 5
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: "deps(go):"
+    ignore:
+      - dependency-name: "golang"
+        update-types:
+          - "version-update:semver-major"
+
   - package-ecosystem: "gomod"
     directories:
       - "/src/SecurityLogEventProcessor"

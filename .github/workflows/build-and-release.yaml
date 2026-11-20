@@ -31,7 +31,6 @@ on:
 
 env:
   OCB_VERSION: "v0.150.0"
-  GO_VERSION: "1.25.9"
   PYTHON_VERSION: "3.12"
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository_owner }}/dynatrace-security-events-collector
@@ -53,17 +52,39 @@ concurrency:
 jobs:
 
   # ------------------------------------------------------------------
+  # Job: Resolve Go version from the Docker build image
+  # ------------------------------------------------------------------
+  go-version:
+    name: Resolve Go version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4.4.0
+
+      - name: Read Go version from Dockerfile
+        id: version
+        run: |
+          version=$(sed -nE 's/^FROM golang:([0-9]+\.[0-9]+\.[0-9]+)-alpine AS builder$/\1/p' docker/Dockerfile)
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Expected exactly one pinned golang image version in docker/Dockerfile" >&2
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+  # ------------------------------------------------------------------
   # Job: Lint & static analysis
   # ------------------------------------------------------------------
   lint:
     name: Lint & code quality
     runs-on: ubuntu-latest
+    needs: [go-version]
     steps:
       - uses: actions/checkout@v4.4.0
 
       - uses: actions/setup-go@v5.6.0
         with:
-          go-version: ${{ env.GO_VERSION }}
+          go-version: ${{ needs.go-version.outputs.version }}
           cache: true
 
       - name: Run go vet (processor)
@@ -94,12 +115,13 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
+    needs: [go-version]
     steps:
       - uses: actions/checkout@v4.4.0
 
       - uses: actions/setup-go@v5.6.0
         with:
-          go-version: ${{ env.GO_VERSION }}
+          go-version: ${{ needs.go-version.outputs.version }}
           cache: true
 
       - name: Test processor (with race detection)
@@ -134,12 +156,13 @@ jobs:
   govulncheck:
     name: Go vulnerability check
     runs-on: ubuntu-latest
+    needs: [go-version]
     steps:
       - uses: actions/checkout@v4.4.0
 
       - uses: actions/setup-go@v5.6.0
         with:
-          go-version: ${{ env.GO_VERSION }}
+          go-version: ${{ needs.go-version.outputs.version }}
           cache: true
 
       - name: Install govulncheck
@@ -163,13 +186,13 @@ jobs:
   build-plugins:
     name: Build plugins
     runs-on: ubuntu-latest
-    needs: [lint, test]
+    needs: [go-version, lint, test]
     steps:
       - uses: actions/checkout@v4.4.0
 
       - uses: actions/setup-go@v5.6.0
         with:
-          go-version: ${{ env.GO_VERSION }}
+          go-version: ${{ needs.go-version.outputs.version }}
           cache: true
 
       - name: Build processor
@@ -186,7 +209,7 @@ jobs:
   build-binaries:
     name: Build ${{ matrix.goos }}/${{ matrix.goarch }}
     runs-on: ubuntu-latest
-    needs: [build-plugins]
+    needs: [go-version, build-plugins]
     strategy:
       fail-fast: false
       matrix:
@@ -207,7 +230,7 @@ jobs:
 
       - uses: actions/setup-go@v5.6.0
         with:
-          go-version: ${{ env.GO_VERSION }}
+          go-version: ${{ needs.go-version.outputs.version }}
           cache: true
 
       - name: Install OCB

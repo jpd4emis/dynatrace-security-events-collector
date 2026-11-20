@@ -1,6 +1,6 @@
 module github.com/dynatrace-oss/dynatrace-security-events-collector/src/SecurityLogEventProcessor
 
-go 1.25.9
+go 1.27.3
 
 require (
 	github.com/google/uuid v1.6.0
